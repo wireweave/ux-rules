@@ -32,10 +32,8 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: |
-          cat > ~/.npmrc << EOF
-          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
-          @wireweave:registry=https://npm.pkg.github.com
-          EOF
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          echo "@wireweave:registry=https://npm.pkg.github.com" >> .npmrc
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
