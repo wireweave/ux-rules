@@ -1,26 +1,19 @@
 # @wireweave/ux-rules
 
+[![npm version](https://img.shields.io/npm/v/@wireweave/ux-rules.svg)](https://www.npmjs.com/package/@wireweave/ux-rules)
+[![npm downloads](https://img.shields.io/npm/dm/@wireweave/ux-rules.svg)](https://www.npmjs.com/package/@wireweave/ux-rules)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 UX validation rules for Wireweave DSL. This package provides automated UX best practice validation for wireframe designs.
 
-> **Note:** This is a private package distributed via GitHub Packages.
-
 ## Installation
-
-### 1. Configure npm registry
-
-Create or update `.npmrc` in your project:
-
-```
-@wireweave:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
-```
-
-### 2. Install the package
 
 ```bash
 npm install @wireweave/ux-rules
 # or
 pnpm add @wireweave/ux-rules
+# or
+yarn add @wireweave/ux-rules
 ```
 
 ## Usage
@@ -96,6 +89,10 @@ Formats validation result as human-readable string.
 | `error` | Critical UX problem | -10 |
 | `warning` | Should fix | -3 |
 | `info` | Consider improving | -1 |
+
+## Related Packages
+
+- [@wireweave/core](https://www.npmjs.com/package/@wireweave/core) - Core parser and renderer
 
 ## License
 

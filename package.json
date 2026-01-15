@@ -20,13 +20,17 @@
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "release": "release-it",
+    "release:beta": "release-it --preRelease=beta"
   },
   "dependencies": {
     "@wireweave/core": "^1.2.0"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^10.0.4",
     "@types/node": "^22.0.0",
+    "release-it": "^19.2.3",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "vitest": "^3.1.1"
@@ -41,9 +45,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wireweave/ux-rules.git"
+    "url": "git+https://github.com/wireweave/ux-rules.git"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  }
+  "bugs": {
+    "url": "https://github.com/wireweave/ux-rules/issues"
+  },
+  "homepage": "https://github.com/wireweave/ux-rules#readme"
 }
