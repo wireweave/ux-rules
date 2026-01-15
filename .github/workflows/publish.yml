@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install dependencies (from npm)
         run: pnpm install
 
       - name: Build
@@ -32,5 +32,10 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
-          pnpm publish --registry https://npm.pkg.github.com --no-git-checks
+          cat > ~/.npmrc << EOF
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          @wireweave:registry=https://npm.pkg.github.com
+          EOF
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
