@@ -30,9 +30,7 @@ jobs:
       - name: Run tests
         run: pnpm test
 
-      - name: Setup GitHub Packages auth
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
-
       - name: Publish to GitHub Packages
-        run: pnpm publish --no-git-checks
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+          pnpm publish --registry https://npm.pkg.github.com --no-git-checks
