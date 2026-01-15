@@ -48,10 +48,13 @@ const issues = getUXIssues(doc);
 |----------|-------------|
 | `accessibility` | Screen reader support, labels, alt text |
 | `form` | Form UX patterns, input types, validation |
-| `usability` | General usability (empty containers, CTA, loading states) |
+| `usability` | General usability (empty containers, CTA, loading states, cognitive load) |
 | `touch-target` | Touch target sizes for mobile |
 | `navigation` | Navigation patterns (item count, active states) |
 | `consistency` | Consistent styling across components |
+| `content` | Text quality, placeholder detection, title requirements |
+| `data-display` | Tables, lists, empty states, pagination |
+| `feedback` | Spinners, progress bars, toasts, alerts |
 
 ## API
 

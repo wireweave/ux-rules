@@ -244,6 +244,172 @@ export const maxNestingDepth: UXRule = {
 };
 
 /**
+ * Check for too many buttons in a container (decision fatigue)
+ */
+export const tooManyButtons: UXRule = {
+  id: 'usability-too-many-buttons',
+  category: 'usability',
+  severity: 'warning',
+  name: 'Too many buttons in container',
+  description: 'Too many buttons can cause decision fatigue for users',
+  appliesTo: ['Card', 'Section', 'Row', 'Modal'],
+  check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
+    const MAX_BUTTONS = 5;
+
+    if (!('children' in node) || !Array.isArray(node.children)) {
+      return null;
+    }
+
+    // Count direct button children only (not recursive)
+    const buttonCount = (node.children as AnyNode[]).filter(c => c.type === 'Button').length;
+
+    if (buttonCount > MAX_BUTTONS) {
+      return {
+        ruleId: 'usability-too-many-buttons',
+        category: 'usability',
+        severity: 'warning',
+        message: `Container has ${buttonCount} buttons (recommended max: ${MAX_BUTTONS})`,
+        description: 'Too many choices can overwhelm users and slow decision-making',
+        suggestion: 'Consider grouping actions in a dropdown or prioritizing the most important actions',
+        path: context.path,
+        nodeType: node.type,
+        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+      };
+    }
+    return null;
+  },
+};
+
+/**
+ * Check for forms with too many fields
+ */
+export const tooManyFormFields: UXRule = {
+  id: 'usability-too-many-form-fields',
+  category: 'usability',
+  severity: 'info',
+  name: 'Too many form fields',
+  description: 'Forms with many fields have higher abandonment rates',
+  appliesTo: ['Card', 'Section', 'Main', 'Modal'],
+  check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
+    const MAX_FORM_FIELDS = 10;
+
+    if (!('children' in node) || !Array.isArray(node.children)) {
+      return null;
+    }
+
+    // Count all form fields recursively
+    let formFieldCount = 0;
+    const formTypes = ['Input', 'Textarea', 'Select', 'Checkbox', 'Radio'];
+
+    function countFormFields(children: AnyNode[]) {
+      for (const child of children) {
+        if (formTypes.includes(child.type)) {
+          formFieldCount++;
+        }
+        if ('children' in child && Array.isArray(child.children)) {
+          countFormFields(child.children as AnyNode[]);
+        }
+      }
+    }
+
+    countFormFields(node.children as AnyNode[]);
+
+    if (formFieldCount > MAX_FORM_FIELDS) {
+      return {
+        ruleId: 'usability-too-many-form-fields',
+        category: 'usability',
+        severity: 'info',
+        message: `Form area has ${formFieldCount} fields (recommended max: ${MAX_FORM_FIELDS})`,
+        description: 'Long forms increase cognitive load and abandonment rates',
+        suggestion: 'Consider breaking into multiple steps, using progressive disclosure, or removing optional fields',
+        path: context.path,
+        nodeType: node.type,
+        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+      };
+    }
+    return null;
+  },
+};
+
+/**
+ * Check for page with too many elements (cognitive overload)
+ */
+export const tooManyPageElements: UXRule = {
+  id: 'usability-page-complexity',
+  category: 'usability',
+  severity: 'info',
+  name: 'Page may be too complex',
+  description: 'Pages with too many elements can overwhelm users',
+  appliesTo: ['Page'],
+  check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
+    const MAX_ELEMENTS = 50;
+
+    if (!('children' in node) || !Array.isArray(node.children)) {
+      return null;
+    }
+
+    // Count all elements recursively
+    let elementCount = 0;
+
+    function countElements(children: AnyNode[]) {
+      for (const child of children) {
+        elementCount++;
+        if ('children' in child && Array.isArray(child.children)) {
+          countElements(child.children as AnyNode[]);
+        }
+      }
+    }
+
+    countElements(node.children as AnyNode[]);
+
+    if (elementCount > MAX_ELEMENTS) {
+      return {
+        ruleId: 'usability-page-complexity',
+        category: 'usability',
+        severity: 'info',
+        message: `Page has ${elementCount} elements (consider if this complexity is necessary)`,
+        description: 'Complex pages can be overwhelming and slow to render',
+        suggestion: 'Consider splitting into multiple pages, using tabs, or simplifying the layout',
+        path: context.path,
+        nodeType: node.type,
+        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+      };
+    }
+    return null;
+  },
+};
+
+/**
+ * Check for drawer without proper width
+ */
+export const drawerWidth: UXRule = {
+  id: 'usability-drawer-width',
+  category: 'usability',
+  severity: 'info',
+  name: 'Drawer should have appropriate width',
+  description: 'Drawers should have a defined width for consistent UX',
+  appliesTo: ['Drawer'],
+  check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
+    const hasWidth = 'width' in node || 'w' in node;
+
+    if (!hasWidth) {
+      return {
+        ruleId: 'usability-drawer-width',
+        category: 'usability',
+        severity: 'info',
+        message: 'Drawer has no width specified',
+        description: 'Drawers without explicit width may render inconsistently across devices',
+        suggestion: 'Add a width attribute (e.g., width="320" or w="80")',
+        path: context.path,
+        nodeType: node.type,
+        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+      };
+    }
+    return null;
+  },
+};
+
+/**
  * All usability rules
  */
 export const usabilityRules: UXRule[] = [
@@ -253,4 +419,8 @@ export const usabilityRules: UXRule[] = [
   destructiveActionConfirmation,
   modalCloseButton,
   maxNestingDepth,
+  tooManyButtons,
+  tooManyFormFields,
+  tooManyPageElements,
+  drawerWidth,
 ];

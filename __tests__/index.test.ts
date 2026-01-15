@@ -199,7 +199,7 @@ describe('getUXScore', () => {
   });
 
   it('should return high score for simple page', () => {
-    const doc = parse('page { text "Hello" button "Action" primary }');
+    const doc = parse('page { title "Welcome" text "Hello" button "Action" primary }');
     const score = getUXScore(doc);
     expect(score).toBe(100);
   });
