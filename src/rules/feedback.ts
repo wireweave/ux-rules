@@ -6,6 +6,8 @@
 
 import type { AnyNode } from '@wireweave/core';
 import type { UXRule, UXRuleContext, UXIssue } from '../types';
+import { MIN_TOAST_DURATION, MAX_TOAST_DURATION, MAX_TOOLTIP_LENGTH, FORM_INPUT_TYPES } from '../constants';
+import { getNodeText, hasChildren, getNodeLocation, hasChildMatching } from '../utils';
 
 /**
  * Check if spinner has context text
@@ -37,7 +39,7 @@ export const spinnerHasContext: UXRule = {
         suggestion: 'Add a text/label attribute like "Loading..." or "Please wait..."',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -72,7 +74,7 @@ export const progressHasValue: UXRule = {
         suggestion: 'Add a value attribute (0-100) or use indeterminate for unknown duration',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -91,24 +93,22 @@ export const toastDuration: UXRule = {
   appliesTo: ['Toast'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
     const duration = 'duration' in node ? Number(node.duration) : null;
-    const MIN_DURATION = 2000; // 2 seconds
-    const MAX_DURATION = 10000; // 10 seconds
 
     if (duration !== null) {
-      if (duration < MIN_DURATION) {
+      if (duration < MIN_TOAST_DURATION) {
         return {
           ruleId: 'feedback-toast-duration',
           category: 'feedback',
           severity: 'info',
           message: `Toast duration (${duration}ms) may be too short to read`,
           description: 'Users need time to read toast messages',
-          suggestion: `Increase duration to at least ${MIN_DURATION}ms`,
+          suggestion: `Increase duration to at least ${MIN_TOAST_DURATION}ms`,
           path: context.path,
           nodeType: node.type,
-          location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+          location: getNodeLocation(node),
         };
       }
-      if (duration > MAX_DURATION) {
+      if (duration > MAX_TOAST_DURATION) {
         return {
           ruleId: 'feedback-toast-duration',
           category: 'feedback',
@@ -118,7 +118,7 @@ export const toastDuration: UXRule = {
           suggestion: `Consider reducing duration or using a persistent alert instead`,
           path: context.path,
           nodeType: node.type,
-          location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+          location: getNodeLocation(node),
         };
       }
     }
@@ -154,7 +154,7 @@ export const alertDismissible: UXRule = {
         suggestion: 'Add dismissible or closable attribute to allow users to close the alert',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -172,10 +172,7 @@ export const tooltipContentLength: UXRule = {
   description: 'Tooltips should be short and helpful',
   appliesTo: ['Tooltip'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const MAX_TOOLTIP_LENGTH = 100;
-    const content = 'content' in node ? String(node.content || '') : '';
-    const text = 'text' in node ? String(node.text || '') : '';
-    const tooltipText = content || text;
+    const tooltipText = getNodeText(node);
 
     if (tooltipText.length > MAX_TOOLTIP_LENGTH) {
       return {
@@ -187,7 +184,7 @@ export const tooltipContentLength: UXRule = {
         suggestion: 'Keep tooltips brief or use a popover for longer content',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -205,44 +202,35 @@ export const formErrorFeedback: UXRule = {
   description: 'Forms should have a way to display validation errors',
   appliesTo: ['Card', 'Section', 'Modal'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    if (!('children' in node) || !Array.isArray(node.children)) {
+    if (!hasChildren(node)) {
       return null;
     }
 
     // Check if this looks like a form container
-    let hasInputs = false;
-    let hasErrorDisplay = false;
+    const hasInputs = hasChildMatching(node, child => FORM_INPUT_TYPES.includes(child.type));
 
-    function checkChildren(children: AnyNode[]) {
-      for (const child of children) {
-        // Form inputs
-        if (['Input', 'Textarea', 'Select'].includes(child.type)) {
-          hasInputs = true;
-          // Check if input has error prop
-          if ('error' in child || 'errorText' in child || 'helperText' in child) {
-            hasErrorDisplay = true;
-          }
-        }
-        // Error display components
-        if (child.type === 'Alert' && 'variant' in child) {
-          const variant = String(child.variant || '');
-          if (variant === 'error' || variant === 'danger') {
-            hasErrorDisplay = true;
-          }
-        }
-        if (child.type === 'Text' && 'content' in child) {
-          const content = String(child.content || '').toLowerCase();
-          if (content.includes('error') || content.includes('invalid')) {
-            hasErrorDisplay = true;
-          }
-        }
-        if ('children' in child && Array.isArray(child.children)) {
-          checkChildren(child.children as AnyNode[]);
+    const hasErrorDisplay = hasChildMatching(node, child => {
+      // Form input with error props
+      if (FORM_INPUT_TYPES.includes(child.type)) {
+        if ('error' in child || 'errorText' in child || 'helperText' in child) {
+          return true;
         }
       }
-    }
-
-    checkChildren(node.children as AnyNode[]);
+      // Error display components
+      if (child.type === 'Alert' && 'variant' in child) {
+        const variant = String(child.variant || '');
+        if (variant === 'error' || variant === 'danger') {
+          return true;
+        }
+      }
+      if (child.type === 'Text') {
+        const content = getNodeText(child).toLowerCase();
+        if (content.includes('error') || content.includes('invalid')) {
+          return true;
+        }
+      }
+      return false;
+    });
 
     // Only warn if it looks like a form but has no error handling
     if (hasInputs && !hasErrorDisplay) {
@@ -255,7 +243,7 @@ export const formErrorFeedback: UXRule = {
         suggestion: 'Add error/errorText attributes to inputs or include an Alert for form-level errors',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;

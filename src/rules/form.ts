@@ -6,6 +6,8 @@
 
 import type { AnyNode } from '@wireweave/core';
 import type { UXRule, UXRuleContext, UXIssue } from '../types';
+import { FORM_INPUT_TYPES, SUBMIT_WORDS, INPUT_TYPE_SUGGESTIONS } from '../constants';
+import { getNodeText, hasChildren, getNodeLocation, hasChildMatching } from '../utils';
 
 /**
  * Check if form has a submit button
@@ -18,34 +20,19 @@ export const formRequiresSubmit: UXRule = {
   description: 'Forms with input fields should have a clear submit action',
   appliesTo: ['Card', 'Section', 'Modal', 'Main'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    if (!('children' in node) || !Array.isArray(node.children)) {
+    if (!hasChildren(node)) {
       return null;
     }
 
     // Check if container has form inputs
-    let hasInputs = false;
-    let hasSubmitButton = false;
+    const hasInputs = hasChildMatching(node, child => FORM_INPUT_TYPES.includes(child.type));
 
-    function walkChildren(children: AnyNode[]) {
-      for (const child of children) {
-        if (['Input', 'Textarea', 'Select', 'Checkbox', 'Radio'].includes(child.type)) {
-          hasInputs = true;
-        }
-        if (child.type === 'Button') {
-          const isPrimary = 'primary' in child && child.primary;
-          const content = 'content' in child ? String(child.content || '').toLowerCase() : '';
-          const submitWords = ['submit', 'save', 'send', 'create', 'add', 'update', 'confirm', 'ok', 'done'];
-          if (isPrimary || submitWords.some(w => content.includes(w))) {
-            hasSubmitButton = true;
-          }
-        }
-        if ('children' in child && Array.isArray(child.children)) {
-          walkChildren(child.children as AnyNode[]);
-        }
-      }
-    }
-
-    walkChildren(node.children as AnyNode[]);
+    const hasSubmitButton = hasChildMatching(node, child => {
+      if (child.type !== 'Button') return false;
+      const isPrimary = 'primary' in child && child.primary;
+      const content = getNodeText(child).toLowerCase();
+      return isPrimary || SUBMIT_WORDS.some(w => content.includes(w));
+    });
 
     if (hasInputs && !hasSubmitButton) {
       return {
@@ -57,7 +44,7 @@ export const formRequiresSubmit: UXRule = {
         suggestion: 'Add a primary button with a clear action label (e.g., "Submit", "Save")',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -88,7 +75,7 @@ export const requiredFieldIndicator: UXRule = {
         suggestion: 'Add an asterisk (*) to the label or include "required" in the label text',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -140,7 +127,7 @@ export const passwordConfirmation: UXRule = {
         suggestion: 'Add a "Confirm Password" field to prevent typos',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -163,17 +150,7 @@ export const appropriateInputType: UXRule = {
     const placeholder = 'placeholder' in node ? String(node.placeholder || '').toLowerCase() : '';
     const combined = label + ' ' + placeholder;
 
-    const suggestions: { keywords: string[]; type: string }[] = [
-      { keywords: ['email', 'e-mail'], type: 'email' },
-      { keywords: ['phone', 'tel', 'mobile', 'cell'], type: 'tel' },
-      { keywords: ['url', 'website', 'link'], type: 'url' },
-      { keywords: ['password', 'pwd'], type: 'password' },
-      { keywords: ['search', 'find', 'query'], type: 'search' },
-      { keywords: ['date', 'birthday', 'dob'], type: 'date' },
-      { keywords: ['number', 'quantity', 'amount', 'count', 'age'], type: 'number' },
-    ];
-
-    for (const suggestion of suggestions) {
+    for (const suggestion of INPUT_TYPE_SUGGESTIONS) {
       if (suggestion.keywords.some(k => combined.includes(k)) && inputType !== suggestion.type) {
         return {
           ruleId: 'form-input-type',
@@ -184,7 +161,7 @@ export const appropriateInputType: UXRule = {
           suggestion: `Change inputType to "${suggestion.type}"`,
           path: context.path,
           nodeType: node.type,
-          location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+          location: getNodeLocation(node),
         };
       }
     }

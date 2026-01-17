@@ -19,12 +19,12 @@ export type UXRuleCategory =
   | 'usability'      // 사용성
   | 'consistency'    // 일관성
   | 'touch-target'   // 터치 타겟
-  | 'contrast'       // 대비
   | 'navigation'     // 네비게이션
   | 'form'           // 폼
   | 'feedback'       // 피드백
   | 'content'        // 콘텐츠
-  | 'data-display';  // 데이터 표시
+  | 'data-display'   // 데이터 표시
+  | 'interaction';   // 상호작용
 
 /**
  * UX validation issue

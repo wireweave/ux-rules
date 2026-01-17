@@ -6,6 +6,8 @@
 
 import type { AnyNode } from '@wireweave/core';
 import type { UXRule, UXRuleContext, UXIssue } from '../types';
+import { GENERIC_LINK_TEXTS } from '../constants';
+import { getNodeText, getNodeLocation } from '../utils';
 
 /**
  * Check if input has a label
@@ -33,7 +35,7 @@ export const inputRequiresLabel: UXRule = {
           : 'Add a label attribute to describe this field',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -63,7 +65,7 @@ export const imageRequiresAlt: UXRule = {
         suggestion: 'Add an alt attribute describing the image content',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -82,7 +84,7 @@ export const iconButtonRequiresLabel: UXRule = {
   appliesTo: ['Button'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
     const hasIcon = 'icon' in node && node.icon;
-    const hasContent = 'content' in node && node.content && String(node.content).trim();
+    const hasContent = getNodeText(node).trim();
 
     if (hasIcon && !hasContent) {
       return {
@@ -94,7 +96,7 @@ export const iconButtonRequiresLabel: UXRule = {
         suggestion: 'Add text content or aria-label to describe the button action',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -112,10 +114,9 @@ export const linkRequiresDescriptiveText: UXRule = {
   description: 'Links should have descriptive text that indicates where they lead',
   appliesTo: ['Link'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const content = 'content' in node ? String(node.content || '').toLowerCase() : '';
-    const genericTexts = ['click here', 'here', 'read more', 'more', 'link'];
+    const content = getNodeText(node).toLowerCase();
 
-    if (genericTexts.includes(content.trim())) {
+    if (GENERIC_LINK_TEXTS.includes(content.trim())) {
       return {
         ruleId: 'a11y-link-text',
         category: 'accessibility',
@@ -125,7 +126,7 @@ export const linkRequiresDescriptiveText: UXRule = {
         suggestion: `Replace "${content}" with descriptive text that indicates the link destination`,
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -164,7 +165,7 @@ export const headingHierarchy: UXRule = {
         suggestion: `Use h${prevHeadingLevel + 1} instead of h${level}, or add intermediate headings`,
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;

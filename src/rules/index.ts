@@ -7,12 +7,13 @@
 export { accessibilityRules } from './accessibility';
 export { formRules } from './form';
 export { touchTargetRules } from './touch-target';
-export { consistencyRules, resetConsistencyTrackers } from './consistency';
+export { consistencyRules } from './consistency';
 export { usabilityRules } from './usability';
 export { navigationRules } from './navigation';
 export { contentRules } from './content';
 export { dataDisplayRules } from './data-display';
 export { feedbackRules } from './feedback';
+export { interactionRules } from './interaction';
 
 import { accessibilityRules } from './accessibility';
 import { formRules } from './form';
@@ -23,6 +24,7 @@ import { navigationRules } from './navigation';
 import { contentRules } from './content';
 import { dataDisplayRules } from './data-display';
 import { feedbackRules } from './feedback';
+import { interactionRules } from './interaction';
 import type { UXRule } from '../types';
 
 /**
@@ -38,6 +40,7 @@ export const allRules: UXRule[] = [
   ...contentRules,
   ...dataDisplayRules,
   ...feedbackRules,
+  ...interactionRules,
 ];
 
 /**
@@ -53,6 +56,7 @@ export const rulesByCategory = {
   content: contentRules,
   'data-display': dataDisplayRules,
   feedback: feedbackRules,
+  interaction: interactionRules,
 };
 
 /**

@@ -6,6 +6,8 @@
 
 import type { AnyNode } from '@wireweave/core';
 import type { UXRule, UXRuleContext, UXIssue } from '../types';
+import { MAX_BUTTON_TEXT_LENGTH, MAX_TITLE_LENGTH, PLACEHOLDER_PATTERNS } from '../constants';
+import { getNodeText, hasChildren, getChildren, getNodeLocation, hasChildMatching } from '../utils';
 
 /**
  * Check for empty text content
@@ -18,8 +20,7 @@ export const emptyTextContent: UXRule = {
   description: 'Text elements should have meaningful content',
   appliesTo: ['Text', 'Title', 'Label'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const content = 'content' in node ? String(node.content || '') : '';
-    const trimmed = content.trim();
+    const trimmed = getNodeText(node).trim();
 
     if (trimmed === '' || trimmed === '...' || trimmed === 'Lorem ipsum') {
       return {
@@ -31,7 +32,7 @@ export const emptyTextContent: UXRule = {
         suggestion: 'Replace with actual content or remove if not needed',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -49,20 +50,19 @@ export const buttonTextLength: UXRule = {
   description: 'Button labels should be short and action-oriented',
   appliesTo: ['Button'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const MAX_BUTTON_TEXT = 25;
-    const content = 'content' in node ? String(node.content || '') : '';
+    const content = getNodeText(node);
 
-    if (content.length > MAX_BUTTON_TEXT) {
+    if (content.length > MAX_BUTTON_TEXT_LENGTH) {
       return {
         ruleId: 'content-button-text-length',
         category: 'content',
         severity: 'info',
-        message: `Button text is ${content.length} characters (recommended max: ${MAX_BUTTON_TEXT})`,
+        message: `Button text is ${content.length} characters (recommended max: ${MAX_BUTTON_TEXT_LENGTH})`,
         description: 'Long button text can be hard to read and may not fit on smaller screens',
         suggestion: 'Use concise, action-oriented text (e.g., "Save" instead of "Click here to save your changes")',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -80,8 +80,7 @@ export const titleLength: UXRule = {
   description: 'Titles should be short and descriptive',
   appliesTo: ['Title'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const MAX_TITLE_LENGTH = 60;
-    const content = 'content' in node ? String(node.content || '') : '';
+    const content = getNodeText(node);
 
     if (content.length > MAX_TITLE_LENGTH) {
       return {
@@ -93,7 +92,7 @@ export const titleLength: UXRule = {
         suggestion: 'Shorten the title and move details to a subtitle or description',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -111,28 +110,14 @@ export const pageHasTitle: UXRule = {
   description: 'Every page should have a clear title to orient users',
   appliesTo: ['Page'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    if (!('children' in node) || !Array.isArray(node.children)) {
+    if (!hasChildren(node)) {
       return null;
     }
 
     // Look for a Title component anywhere in the page
-    let hasTitle = false;
+    const hasTitleElement = hasChildMatching(node, child => child.type === 'Title');
 
-    function findTitle(children: AnyNode[]) {
-      for (const child of children) {
-        if (child.type === 'Title') {
-          hasTitle = true;
-          return;
-        }
-        if ('children' in child && Array.isArray(child.children)) {
-          findTitle(child.children as AnyNode[]);
-        }
-      }
-    }
-
-    findTitle(node.children as AnyNode[]);
-
-    if (!hasTitle) {
+    if (!hasTitleElement) {
       return {
         ruleId: 'content-page-title',
         category: 'content',
@@ -142,7 +127,7 @@ export const pageHasTitle: UXRule = {
         suggestion: 'Add a Title component to identify the page',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -160,10 +145,10 @@ export const linkHasText: UXRule = {
   description: 'Links must have visible text for users to understand where they lead',
   appliesTo: ['Link'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const content = 'content' in node ? String(node.content || '').trim() : '';
-    const hasChildren = 'children' in node && Array.isArray(node.children) && node.children.length > 0;
+    const content = getNodeText(node).trim();
+    const hasChildElements = hasChildren(node) && getChildren(node).length > 0;
 
-    if (!content && !hasChildren) {
+    if (!content && !hasChildElements) {
       return {
         ruleId: 'content-link-text',
         category: 'content',
@@ -173,7 +158,7 @@ export const linkHasText: UXRule = {
         suggestion: 'Add descriptive text to the link',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -191,21 +176,9 @@ export const noPlaceholderContent: UXRule = {
   description: 'Placeholder text like "Lorem ipsum" should be replaced',
   appliesTo: ['Text', 'Title', 'Label', 'Button'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const content = 'content' in node ? String(node.content || '').toLowerCase() : '';
+    const content = getNodeText(node).toLowerCase();
 
-    const placeholders = [
-      'lorem ipsum',
-      'dolor sit amet',
-      'placeholder',
-      'sample text',
-      'text here',
-      'enter text',
-      'todo',
-      'tbd',
-      'xxx',
-    ];
-
-    for (const placeholder of placeholders) {
+    for (const placeholder of PLACEHOLDER_PATTERNS) {
       if (content.includes(placeholder)) {
         return {
           ruleId: 'content-no-placeholder',
@@ -216,7 +189,7 @@ export const noPlaceholderContent: UXRule = {
           suggestion: 'Replace with actual content',
           path: context.path,
           nodeType: node.type,
-          location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+          location: getNodeLocation(node),
         };
       }
     }

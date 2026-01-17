@@ -6,6 +6,8 @@
 
 import type { AnyNode } from '@wireweave/core';
 import type { UXRule, UXRuleContext, UXIssue } from '../types';
+import { MAX_LIST_ITEMS, MAX_TABLE_COLUMNS } from '../constants';
+import { hasChildren, getChildren, getNodeLocation, isNodeType, getNodeItems } from '../utils';
 
 /**
  * Check if table has header row
@@ -31,7 +33,7 @@ export const tableHasHeader: UXRule = {
         suggestion: 'Add a header attribute or define columns for the table',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -49,16 +51,16 @@ export const listEmptyState: UXRule = {
   description: 'Lists should indicate when they have no items',
   appliesTo: ['List'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const items = 'items' in node && Array.isArray(node.items) ? node.items : [];
-    const children = 'children' in node && Array.isArray(node.children) ? node.children : [];
-    const hasEmptyState = 'emptyState' in node || 'empty' in node;
+    const items = getNodeItems(node);
+    const children = hasChildren(node) ? getChildren(node) : [];
+    const hasEmptyStateAttr = 'emptyState' in node || 'empty' in node;
 
     // If list has items, no need for empty state warning
     if (items.length > 0 || children.length > 0) {
       return null;
     }
 
-    if (!hasEmptyState) {
+    if (!hasEmptyStateAttr) {
       return {
         ruleId: 'data-list-empty-state',
         category: 'data-display',
@@ -68,7 +70,7 @@ export const listEmptyState: UXRule = {
         suggestion: 'Add an emptyState attribute or component to show when list is empty',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -105,7 +107,7 @@ export const tableEmptyState: UXRule = {
         suggestion: 'Add an emptyState attribute to show when table is empty',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -123,13 +125,11 @@ export const listTooManyItems: UXRule = {
   description: 'Lists with many items should consider pagination or virtualization',
   appliesTo: ['List'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const MAX_LIST_ITEMS = 20;
-
-    const items = 'items' in node && Array.isArray(node.items) ? node.items : [];
-    const children = 'children' in node && Array.isArray(node.children) ? node.children : [];
+    const items = getNodeItems(node);
+    const children = hasChildren(node) ? getChildren(node) : [];
     const hasPagination = 'pagination' in node || 'paginated' in node;
 
-    const itemCount = items.length || (children as Array<{ type?: string }>).filter(c => c.type === 'ListItem').length;
+    const itemCount = items.length || children.filter(c => isNodeType(c, 'ListItem')).length;
 
     if (itemCount > MAX_LIST_ITEMS && !hasPagination) {
       return {
@@ -141,7 +141,7 @@ export const listTooManyItems: UXRule = {
         suggestion: 'Add pagination, infinite scroll, or virtualization for long lists',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -159,21 +159,19 @@ export const tableTooManyColumns: UXRule = {
   description: 'Tables with many columns are hard to read on smaller screens',
   appliesTo: ['Table'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const MAX_COLUMNS = 8;
-
     const columns = 'columns' in node && Array.isArray(node.columns) ? node.columns : [];
 
-    if (columns.length > MAX_COLUMNS) {
+    if (columns.length > MAX_TABLE_COLUMNS) {
       return {
         ruleId: 'data-table-columns',
         category: 'data-display',
         severity: 'warning',
-        message: `Table has ${columns.length} columns (recommended max: ${MAX_COLUMNS})`,
+        message: `Table has ${columns.length} columns (recommended max: ${MAX_TABLE_COLUMNS})`,
         description: 'Tables with many columns are difficult to read and may not fit on mobile',
         suggestion: 'Consider hiding less important columns on mobile or using a different layout',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -191,11 +189,11 @@ export const cardGridConsistency: UXRule = {
   description: 'Cards in a grid layout should have consistent dimensions',
   appliesTo: ['Row'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    if (!('children' in node) || !Array.isArray(node.children)) {
+    if (!hasChildren(node)) {
       return null;
     }
 
-    const cards = (node.children as AnyNode[]).filter(c => c.type === 'Card');
+    const cards = getChildren(node).filter(c => c.type === 'Card');
     if (cards.length < 3) return null; // Not really a grid
 
     // Check if cards have varying heights defined
@@ -213,7 +211,7 @@ export const cardGridConsistency: UXRule = {
         suggestion: 'Consider using consistent heights for cards in a grid layout',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
