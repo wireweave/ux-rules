@@ -15,11 +15,18 @@ import type {
   UXRuleCategory,
   UXIssueSeverity,
 } from './types';
-import { allRules, getRulesForCategories, resetConsistencyTrackers } from './rules';
+import { allRules, getRulesForCategories } from './rules';
+import { isAnyNode, toAnyNodeArray } from './utils';
 
 // Re-export types
 export * from './types';
 export { allRules, rulesByCategory, getRulesForCategories } from './rules';
+
+// Re-export constants for custom rule development
+export * from './constants';
+
+// Re-export utilities for custom rule development
+export * from './utils';
 
 /**
  * Severity order for filtering
@@ -48,9 +55,6 @@ export function validateUX(
     customRules = [],
     disabledRules = [],
   } = options;
-
-  // Reset any stateful trackers
-  resetConsistencyTrackers();
 
   // Get applicable rules
   let rules = categories.length > 0
@@ -125,10 +129,11 @@ export function validateUX(
     index: number,
     depth: number
   ): boolean {
+    const rootNode = ast.children?.[0];
     const context: UXRuleContext = {
       path,
       parent,
-      root: ast.children[0] as unknown as AnyNode,
+      root: isAnyNode(rootNode) ? rootNode : null as unknown as AnyNode,
       siblings,
       index,
       depth,
@@ -184,9 +189,9 @@ export function validateUX(
 
   // Validate each page
   if (ast.children) {
-    for (let i = 0; i < ast.children.length; i++) {
-      const page = ast.children[i] as unknown as AnyNode;
-      const children = ast.children as unknown as AnyNode[];
+    const children = toAnyNodeArray(ast.children);
+    for (let i = 0; i < children.length; i++) {
+      const page = children[i];
       walkNode(page, `pages[${i}]`, null, children, i, 0);
     }
   }

@@ -7,32 +7,8 @@
 
 import type { AnyNode } from '@wireweave/core';
 import type { UXRule, UXRuleContext, UXIssue } from '../types';
-
-// Minimum touch target size (44x44 per WCAG AAA, 48x48 per Material Design)
-const MIN_TOUCH_TARGET = 44;
-// const RECOMMENDED_TOUCH_TARGET = 48; // Reserved for future AAA compliance checks
-
-// Size presets mapping
-const SIZE_MAP: Record<string, number> = {
-  xs: 24,
-  sm: 32,
-  md: 40,
-  lg: 48,
-  xl: 56,
-};
-
-/**
- * Get numeric size from size attribute
- */
-function getSizeValue(node: AnyNode): number | null {
-  if (!('size' in node)) return null;
-
-  const size = node.size;
-  if (typeof size === 'number') return size;
-  if (typeof size === 'string' && size in SIZE_MAP) return SIZE_MAP[size];
-
-  return null;
-}
+import { MIN_TOUCH_TARGET } from '../constants';
+import { getSizeValue, getNodeLocation } from '../utils';
 
 /**
  * Check button touch target size
@@ -58,7 +34,7 @@ export const buttonTouchTarget: UXRule = {
         suggestion: `Use size="md" or larger for better touch accessibility`,
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -96,7 +72,7 @@ export const iconButtonTouchTarget: UXRule = {
         suggestion: 'Add padding (p=2 or more) or use a larger size',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -128,7 +104,7 @@ export const checkboxRadioTouchTarget: UXRule = {
         suggestion: 'Add a label to increase the touch target area',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -164,7 +140,7 @@ export const linkSpacing: UXRule = {
             suggestion: 'Add gap=2 or more to the parent row for better touch separation',
             path: context.path,
             nodeType: node.type,
-            location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+            location: getNodeLocation(node),
           };
         }
       }
@@ -197,7 +173,7 @@ export const avatarTouchTarget: UXRule = {
         suggestion: 'Use size="md" or larger for clickable avatars',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;

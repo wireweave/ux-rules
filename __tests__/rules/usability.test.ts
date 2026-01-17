@@ -269,4 +269,179 @@ describe('Usability Rules', () => {
       expect(issue).toBeUndefined();
     });
   });
+
+  describe('usability-too-many-buttons', () => {
+    it('should report warning for container with too many buttons', () => {
+      const doc = parse(`
+        page {
+          card {
+            button "A"
+            button "B"
+            button "C"
+            button "D"
+            button "E"
+            button "F"
+          }
+        }
+      `);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-too-many-buttons');
+      expect(issue).toBeDefined();
+      expect(issue?.severity).toBe('warning');
+      expect(issue?.message).toContain('6 buttons');
+    });
+
+    it('should pass for container with acceptable number of buttons', () => {
+      const doc = parse(`
+        page {
+          row {
+            button "Cancel"
+            button "Save" primary
+          }
+        }
+      `);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-too-many-buttons');
+      expect(issue).toBeUndefined();
+    });
+  });
+
+  describe('usability-too-many-form-fields', () => {
+    it('should report info for form with too many fields', () => {
+      const doc = parse(`
+        page {
+          card {
+            input label="Field 1"
+            input label="Field 2"
+            input label="Field 3"
+            input label="Field 4"
+            input label="Field 5"
+            input label="Field 6"
+            input label="Field 7"
+            input label="Field 8"
+            input label="Field 9"
+            input label="Field 10"
+            input label="Field 11"
+          }
+        }
+      `);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-too-many-form-fields');
+      expect(issue).toBeDefined();
+      expect(issue?.severity).toBe('info');
+      expect(issue?.message).toContain('11 fields');
+    });
+
+    it('should count nested form fields', () => {
+      const doc = parse(`
+        page {
+          section {
+            row {
+              col { input label="A" input label="B" input label="C" input label="D" input label="E" }
+              col { input label="F" input label="G" input label="H" input label="I" input label="J" }
+            }
+            select label="K"
+          }
+        }
+      `);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-too-many-form-fields');
+      expect(issue).toBeDefined();
+    });
+
+    it('should pass for form with acceptable number of fields', () => {
+      const doc = parse(`
+        page {
+          card {
+            input label="Email"
+            input label="Password" inputType="password"
+            button "Login" primary
+          }
+        }
+      `);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-too-many-form-fields');
+      expect(issue).toBeUndefined();
+    });
+  });
+
+  describe('usability-page-complexity', () => {
+    it('should report info for page with too many elements', () => {
+      // Generate a page with many elements (>50)
+      let elements = '';
+      for (let i = 0; i < 60; i++) {
+        elements += `text "Item ${i}" `;
+      }
+      const doc = parse(`page { ${elements} }`);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-page-complexity');
+      expect(issue).toBeDefined();
+      expect(issue?.severity).toBe('info');
+    });
+
+    it('should pass for simple page', () => {
+      const doc = parse(`
+        page {
+          header { title "Hello" }
+          main { text "Content" }
+          footer { text "Footer" }
+        }
+      `);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-page-complexity');
+      expect(issue).toBeUndefined();
+    });
+  });
+
+  describe('usability-drawer-width', () => {
+    it('should report info for drawer without width', () => {
+      const doc = parse(`
+        page {
+          drawer {
+            nav items=["Home", "About"]
+          }
+        }
+      `);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-drawer-width');
+      expect(issue).toBeDefined();
+      expect(issue?.severity).toBe('info');
+    });
+
+    it('should pass for drawer with width', () => {
+      const doc = parse(`
+        page {
+          drawer width=320 {
+            nav items=["Home", "About"]
+          }
+        }
+      `);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-drawer-width');
+      expect(issue).toBeUndefined();
+    });
+
+    it('should pass for drawer with w attribute', () => {
+      const doc = parse(`
+        page {
+          drawer w=80 {
+            nav items=["Home"]
+          }
+        }
+      `);
+      const result = validateUX(doc, { categories: ['usability'] });
+
+      const issue = result.issues.find(i => i.ruleId === 'usability-drawer-width');
+      expect(issue).toBeUndefined();
+    });
+  });
 });

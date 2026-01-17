@@ -6,30 +6,8 @@
 
 import type { AnyNode } from '@wireweave/core';
 import type { UXRule, UXRuleContext, UXIssue } from '../types';
-
-/**
- * Track button styles across the document
- */
-const buttonStyleTracker = new Map<string, { style: string; path: string }[]>();
-
-/**
- * Reset tracker (call before validating a new document)
- */
-export function resetConsistencyTrackers() {
-  buttonStyleTracker.clear();
-}
-
-/**
- * Get button style
- */
-function getButtonStyle(node: AnyNode): string {
-  if ('primary' in node && node.primary) return 'primary';
-  if ('secondary' in node && node.secondary) return 'secondary';
-  if ('outline' in node && node.outline) return 'outline';
-  if ('ghost' in node && node.ghost) return 'ghost';
-  if ('danger' in node && node.danger) return 'danger';
-  return 'default';
-}
+import { ERROR_WORDS, SUCCESS_WORDS, WARNING_WORDS } from '../constants';
+import { getNodeText, hasChildren, getChildren, getButtonStyle, getNodeLocation } from '../utils';
 
 /**
  * Check for mixed button styles in same context
@@ -42,12 +20,12 @@ export const consistentButtonStyles: UXRule = {
   description: 'Action buttons in the same context should use consistent styling',
   appliesTo: ['Row', 'Col', 'Card', 'Modal'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    if (!('children' in node) || !Array.isArray(node.children)) {
+    if (!hasChildren(node)) {
       return null;
     }
 
     // Find all direct button children
-    const buttons = (node.children as AnyNode[]).filter(c => c.type === 'Button');
+    const buttons = getChildren(node).filter(c => c.type === 'Button');
     if (buttons.length < 2) return null;
 
     // Check for primary/secondary pattern (common and expected)
@@ -76,7 +54,7 @@ export const consistentButtonStyles: UXRule = {
         suggestion: 'Use primary for main action, outline/ghost for secondary actions',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -111,7 +89,7 @@ export const consistentSpacing: UXRule = {
         suggestion: 'Use the same gap value for sibling containers',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -162,7 +140,7 @@ export const consistentCardStyling: UXRule = {
         suggestion: 'Apply the same visual treatment to sibling cards',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -180,15 +158,10 @@ export const consistentAlertVariants: UXRule = {
   description: 'Alerts should use appropriate variants for their purpose',
   appliesTo: ['Alert'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const content = 'content' in node ? String(node.content || '').toLowerCase() : '';
+    const content = getNodeText(node).toLowerCase();
     const variant = 'variant' in node ? String(node.variant || '') : '';
 
-    // Check if variant matches content
-    const errorWords = ['error', 'fail', 'invalid', 'wrong', 'denied'];
-    const successWords = ['success', 'saved', 'created', 'updated', 'complete'];
-    const warningWords = ['warning', 'caution', 'attention', 'note'];
-
-    if (errorWords.some(w => content.includes(w)) && variant !== 'danger') {
+    if (ERROR_WORDS.some(w => content.includes(w)) && variant !== 'danger') {
       return {
         ruleId: 'consistency-alert-variants',
         category: 'consistency',
@@ -198,11 +171,11 @@ export const consistentAlertVariants: UXRule = {
         suggestion: 'Add variant=danger to this error alert',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
 
-    if (successWords.some(w => content.includes(w)) && variant !== 'success') {
+    if (SUCCESS_WORDS.some(w => content.includes(w)) && variant !== 'success') {
       return {
         ruleId: 'consistency-alert-variants',
         category: 'consistency',
@@ -212,11 +185,11 @@ export const consistentAlertVariants: UXRule = {
         suggestion: 'Add variant=success to this success alert',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
 
-    if (warningWords.some(w => content.includes(w)) && variant !== 'warning') {
+    if (WARNING_WORDS.some(w => content.includes(w)) && variant !== 'warning') {
       return {
         ruleId: 'consistency-alert-variants',
         category: 'consistency',
@@ -226,7 +199,7 @@ export const consistentAlertVariants: UXRule = {
         suggestion: 'Add variant=warning to this warning alert',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
 

@@ -2,16 +2,11 @@
  * Consistency Rules Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { parse } from '@wireweave/core';
 import { validateUX } from '../../src';
-import { resetConsistencyTrackers } from '../../src/rules';
 
 describe('Consistency Rules', () => {
-  beforeEach(() => {
-    resetConsistencyTrackers();
-  });
-
   describe('consistency-button-styles', () => {
     it('should report info for many different button styles', () => {
       const doc = parse(`

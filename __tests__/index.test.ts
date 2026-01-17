@@ -199,7 +199,8 @@ describe('getUXScore', () => {
   });
 
   it('should return high score for simple page', () => {
-    const doc = parse('page { text "Hello" button "Action" primary }');
+    // Button needs an action to avoid interaction-button-action warning
+    const doc = parse('page { title "Welcome" text "Hello" button "Action" primary onClick="handleClick" }');
     const score = getUXScore(doc);
     expect(score).toBe(100);
   });

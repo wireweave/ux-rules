@@ -6,6 +6,8 @@
 
 import type { AnyNode } from '@wireweave/core';
 import type { UXRule, UXRuleContext, UXIssue } from '../types';
+import { MAX_NAV_ITEMS, MAX_TABS, HOME_WORDS } from '../constants';
+import { hasChildren, getChildren, getNodeLocation, getNodeItems } from '../utils';
 
 /**
  * Check for navigation with too many items
@@ -18,9 +20,7 @@ export const navItemCount: UXRule = {
   description: 'Navigation menus with too many items can overwhelm users',
   appliesTo: ['Nav'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const MAX_NAV_ITEMS = 7; // Miller's law
-
-    const items = 'items' in node && Array.isArray(node.items) ? node.items : [];
+    const items = getNodeItems(node);
 
     if (items.length > MAX_NAV_ITEMS) {
       return {
@@ -32,7 +32,7 @@ export const navItemCount: UXRule = {
         suggestion: 'Group related items into categories or use a hierarchical navigation',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -50,7 +50,7 @@ export const navActiveState: UXRule = {
   description: 'Users should know which page they are currently on',
   appliesTo: ['Nav'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const items = 'items' in node && Array.isArray(node.items) ? node.items : [];
+    const items = getNodeItems(node);
 
     if (items.length === 0) return null;
 
@@ -72,7 +72,7 @@ export const navActiveState: UXRule = {
         suggestion: 'Add active attribute to the current navigation item',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -90,7 +90,7 @@ export const breadcrumbHasHome: UXRule = {
   description: 'Breadcrumbs typically start with a home or root link',
   appliesTo: ['Breadcrumb'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const items = 'items' in node && Array.isArray(node.items) ? node.items : [];
+    const items = getNodeItems(node);
 
     if (items.length === 0) return null;
 
@@ -99,9 +99,7 @@ export const breadcrumbHasHome: UXRule = {
       ? firstItem.toLowerCase()
       : (firstItem as { label?: string })?.label?.toLowerCase() || '';
 
-    const homeWords = ['home', 'dashboard', 'main', 'start'];
-
-    if (!homeWords.some(w => firstLabel.includes(w))) {
+    if (!HOME_WORDS.some(w => firstLabel.includes(w))) {
       return {
         ruleId: 'nav-breadcrumb-home',
         category: 'navigation',
@@ -111,7 +109,7 @@ export const breadcrumbHasHome: UXRule = {
         suggestion: 'Add "Home" or equivalent as the first breadcrumb item',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -129,18 +127,11 @@ export const tabCount: UXRule = {
   description: 'Too many tabs can be overwhelming',
   appliesTo: ['Tabs'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const MAX_TABS = 5;
-
-    const items = 'items' in node && Array.isArray(node.items) ? node.items : [];
-    const children = 'children' in node && Array.isArray(node.children) ? node.children : [];
+    const items = getNodeItems(node);
+    const children = hasChildren(node) ? getChildren(node) : [];
 
     // Count tabs - items array or children with type containing 'tab'
-    const childTabCount = children.filter((c: unknown) => {
-      if (typeof c === 'object' && c !== null && 'type' in c) {
-        return String((c as { type: string }).type).toLowerCase().includes('tab');
-      }
-      return false;
-    }).length;
+    const childTabCount = children.filter(c => c.type.toLowerCase().includes('tab')).length;
 
     const tabCount = items.length || childTabCount;
 
@@ -154,7 +145,7 @@ export const tabCount: UXRule = {
         suggestion: 'Consider using a different navigation pattern or grouping related content',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
@@ -172,8 +163,8 @@ export const dropdownHasItems: UXRule = {
   description: 'Dropdown menus need items to be functional',
   appliesTo: ['Dropdown'],
   check: (node: AnyNode, context: UXRuleContext): UXIssue | null => {
-    const items = 'items' in node && Array.isArray(node.items) ? node.items : [];
-    const children = 'children' in node && Array.isArray(node.children) ? node.children : [];
+    const items = getNodeItems(node);
+    const children = hasChildren(node) ? getChildren(node) : [];
 
     if (items.length === 0 && children.length === 0) {
       return {
@@ -185,7 +176,7 @@ export const dropdownHasItems: UXRule = {
         suggestion: 'Add items to the dropdown menu',
         path: context.path,
         nodeType: node.type,
-        location: node.loc ? { line: node.loc.start.line, column: node.loc.start.column } : undefined,
+        location: getNodeLocation(node),
       };
     }
     return null;
