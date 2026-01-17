@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0-beta.0](https://github.com/wireweave/ux-rules/compare/v1.1.0...v1.2.0-beta.0) (2026-01-17)
+
+### Features
+
+* add content, data-display, and feedback rule categories ([2acab84](https://github.com/wireweave/ux-rules/commit/2acab84020947b202b0d741f6b6698598a4e01ca))
+* setup npm public publishing with release-it ([a8738ef](https://github.com/wireweave/ux-rules/commit/a8738ef553e7abe9aa5d140a78de9c5e625d22af))
+
+### Refactoring
+
+* centralize utils and constants, add interaction rules ([7e77fd9](https://github.com/wireweave/ux-rules/commit/7e77fd920f509cd2394260e975f7950ce2287bc3))
+
+### Documentation
+
+* update README for npm public package ([241d588](https://github.com/wireweave/ux-rules/commit/241d58853ccf4fe27c127662f02b7c5aebf6d72e))
+
 ## [1.1.0](https://github.com/wireweave/ux-rules/compare/v1.0.0...v1.1.0) (2026-01-17)
 
 ### Features
