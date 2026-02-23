@@ -1,0 +1,22 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@wireweave/core':
+        specifier: ^2.1.0
+        version: 2.1.0
+
+packages:
+
+  '@wireweave/core@2.1.0':
+    resolution: {integrity: sha512-uGHMKFD1AFPWGkpRY8YNDujeuY063ccPsAKj+izFVanF2lsE6qCAE2KQlNaHfhvxvUHDHvArYL6YEEYw8QzcUA==}
+
+snapshots:
+
+  '@wireweave/core@2.1.0': {}

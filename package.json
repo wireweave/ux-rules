@@ -25,7 +25,7 @@
     "release:beta": "release-it --preRelease=beta"
   },
   "dependencies": {
-    "@wireweave/core": "^2.0.0"
+    "@wireweave/core": "^2.1.0"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "^10.0.4",
