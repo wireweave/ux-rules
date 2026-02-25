@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.2.0-beta.2](https://github.com/wireweave/ux-rules/compare/v1.2.0-beta.1...v1.2.0-beta.2) (2026-02-25)
+
 ## [1.2.0-beta.1](https://github.com/wireweave/ux-rules/compare/v1.2.0-beta.0...v1.2.0-beta.1) (2026-02-23)
 
 ## [1.2.0-beta.0](https://github.com/wireweave/ux-rules/compare/v1.1.0...v1.2.0-beta.0) (2026-01-17)

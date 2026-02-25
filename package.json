@@ -1,6 +1,6 @@
 {
   "name": "@wireweave/ux-rules",
-  "version": "1.2.0-beta.1",
+  "version": "1.2.0-beta.2",
   "description": "UX validation rules for wireweave",
   "type": "module",
   "main": "dist/index.js",
@@ -25,7 +25,7 @@
     "release:beta": "release-it --preRelease=beta"
   },
   "dependencies": {
-    "@wireweave/core": "^2.1.0"
+    "@wireweave/core": "^2.2.0"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "^10.0.4",
