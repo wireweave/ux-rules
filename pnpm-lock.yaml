@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@wireweave/core':
-        specifier: ^2.6.0
-        version: 2.6.0
+        specifier: ^2.7.0
+        version: 2.7.0
     devDependencies:
       '@release-it/conventional-changelog':
         specifier: ^10.0.4
@@ -610,8 +610,8 @@ packages:
   '@vitest/utils@3.2.4':
     resolution: {integrity: sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA==}
 
-  '@wireweave/core@2.6.0':
-    resolution: {integrity: sha512-Cov/aVX/+bjoduUJTBxXuDxYOiQuNnlbjkX+pyVL9azoT7RNKwHLnQ3IXfhxeQzG/nfP17Mbon0Vmd5gsoz1lg==}
+  '@wireweave/core@2.7.0':
+    resolution: {integrity: sha512-6RxNbv542qkg3rFazvKECuRGrHz1Ly7unTSZBSmjYsD1TpkgeECUrfuNkWyZ1t9N1PjcecOeFzWlC+Oj9kWDGg==}
 
   acorn@8.16.0:
     resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
@@ -2100,7 +2100,7 @@ snapshots:
       loupe: 3.2.1
       tinyrainbow: 2.0.0
 
-  '@wireweave/core@2.6.0': {}
+  '@wireweave/core@2.7.0': {}
 
   acorn@8.16.0: {}
 
